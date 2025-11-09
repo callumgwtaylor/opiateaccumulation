@@ -6,7 +6,7 @@
 
 **Tier 1 - Regulatory/Authoritative**
 1. **FDA Drug Label - Morphine Sulfate Injection**
-   - URL: https://www.accessdata.fda.gov/drugsatfda_docs/label/2021/202515s025lbl.pdf
+   - URL: https://www.accessdata.fda.gov/drugsatfda_docs/label/2021/202515s025lbl.pdf DONE
    - Need: Full Clinical Pharmacology section (Section 12)
    - Parameters: PK parameters, special populations, metabolites
 
@@ -16,17 +16,17 @@
    - Parameters: All basic PK parameters, renal impairment data
 
 **Tier 2 - Primary Literature**
-3. **Lotsch J, et al. (2002) - Morphine population pharmacokinetics**
+3. **Lotsch J, et al. (2002) - Morphine population pharmacokinetics** DONE
    - Full citation needed
    - Look for: "morphine" "Lotsch" "2002" in PubMed
    - Parameters: Population PK parameters, clearance, Vd, covariates
 
-4. **Study on M6G and M3G metabolites in renal failure**
+4. **Study on M6G and M3G metabolites in renal failure** DONE
    - Search: "morphine-6-glucuronide" "renal failure" "accumulation"
    - Need recent systematic review or meta-analysis
    - Parameters: M6G half-life in renal failure, accumulation factors
 
-5. **Palliative Care Formulary (PCF) - Latest edition (8th, 2024?)**
+5. **Palliative Care Formulary (PCF) - Latest edition (8th, 2024?)** DONE
    - Morphine monograph
    - Parameters: Equianalgesic ratios, practical dosing
 
