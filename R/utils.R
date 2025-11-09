@@ -371,11 +371,12 @@ estimate_creatinine_clearance <- function(age, weight, serum_creatinine,
   }
 
   # Cockcroft-Gault equation
-  # CrCl = ((140 - age) × weight) / (72 × SCr) × 0.85 (if female)
+  # CrCl = ((140 - age) × weight) / (72 × SCr) × factor (if female)
   crcl <- ((140 - age) * weight) / (72 * serum_creatinine)
 
   if (sex == "female") {
-    crcl <- crcl * 0.85
+    female_factor <- get_param_value("general", "cockcroft_gault_female_factor")
+    crcl <- crcl * female_factor
   }
 
   return(crcl)
@@ -385,6 +386,7 @@ estimate_creatinine_clearance <- function(age, weight, serum_creatinine,
 #' Categorize Renal Function
 #'
 #' Categorizes renal function based on creatinine clearance.
+#' Thresholds are loaded from reference_values.csv.
 #'
 #' @param creatinine_clearance Numeric. CrCl in mL/min
 #' @return Character. Renal function category
@@ -393,13 +395,19 @@ categorize_renal_function <- function(creatinine_clearance) {
     stop("creatinine_clearance must be a non-negative number")
   }
 
-  category <- if (creatinine_clearance >= 80) {
+  # Load thresholds from CSV
+  threshold_normal <- get_param_value("general", "renal_threshold_normal")
+  threshold_mild <- get_param_value("general", "renal_threshold_mild")
+  threshold_moderate <- get_param_value("general", "renal_threshold_moderate")
+  threshold_severe <- get_param_value("general", "renal_threshold_severe")
+
+  category <- if (creatinine_clearance >= threshold_normal) {
     "normal"
-  } else if (creatinine_clearance >= 50) {
+  } else if (creatinine_clearance >= threshold_mild) {
     "mild"
-  } else if (creatinine_clearance >= 30) {
+  } else if (creatinine_clearance >= threshold_moderate) {
     "moderate"
-  } else if (creatinine_clearance >= 10) {
+  } else if (creatinine_clearance >= threshold_severe) {
     "severe"
   } else {
     "dialysis"

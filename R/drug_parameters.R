@@ -5,6 +5,9 @@
 # This module defines pharmacokinetic parameters for three opioids commonly
 # used in palliative care: morphine, oxycodone, and alfentanil.
 #
+# All parameters are loaded from data/reference_values.csv to ensure a single
+# source of truth and facilitate parameter updates.
+#
 # Parameters are based on published literature:
 # - Lotsch et al. (2002) - Morphine population pharmacokinetics
 # - Saari et al. (2012) - Oxycodone pharmacokinetic parameters
@@ -13,6 +16,161 @@
 #
 # Author: Claude Code
 # Date: 2025-11-09
+# ==============================================================================
+
+# ==============================================================================
+# CSV DATA LOADER
+# ==============================================================================
+
+# Global variable to cache reference values
+.reference_data <- NULL
+
+#' Load Reference Values from CSV
+#'
+#' Loads the reference values CSV file and caches it for subsequent use.
+#' This ensures all parameters come from a single source of truth.
+#'
+#' @param force_reload Logical. Force reload from disk even if cached
+#' @return Data frame with reference values
+load_reference_values <- function(force_reload = FALSE) {
+  if (is.null(.reference_data) || force_reload) {
+    csv_path <- "data/reference_values.csv"
+
+    # Check if file exists
+    if (!file.exists(csv_path)) {
+      stop(paste("Reference values file not found:", csv_path))
+    }
+
+    # Load CSV
+    .reference_data <<- read.csv(csv_path, stringsAsFactors = FALSE)
+
+    # Validate required columns
+    required_cols <- c("drug", "parameter", "value", "unit", "reference", "notes")
+    missing_cols <- setdiff(required_cols, names(.reference_data))
+    if (length(missing_cols) > 0) {
+      stop(paste("Missing required columns in CSV:", paste(missing_cols, collapse = ", ")))
+    }
+  }
+
+  return(.reference_data)
+}
+
+
+#' Get Parameter Value from Reference Data
+#'
+#' Retrieves a specific parameter value for a drug from the reference values CSV.
+#'
+#' @param drug Character. Drug name ("morphine", "oxycodone", "alfentanil", or "general")
+#' @param parameter Character. Parameter name
+#' @param default Any. Default value if parameter not found (optional)
+#' @return Numeric or character value of the parameter
+#' @examples
+#' get_param_value("morphine", "half_life_normal")
+#' get_param_value("general", "normal_crcl")
+get_param_value <- function(drug, parameter, default = NULL) {
+  ref_data <- load_reference_values()
+
+  # Filter for the specific drug and parameter
+  value <- ref_data$value[ref_data$drug == drug & ref_data$parameter == parameter]
+
+  if (length(value) == 0) {
+    if (!is.null(default)) {
+      return(default)
+    }
+    stop(paste0("Parameter '", parameter, "' not found for drug '", drug, "'"))
+  }
+
+  if (length(value) > 1) {
+    warning(paste0("Multiple values found for ", drug, ":", parameter, ". Using first."))
+    value <- value[1]
+  }
+
+  # Convert to numeric if possible
+  numeric_value <- suppressWarnings(as.numeric(value))
+  if (!is.na(numeric_value)) {
+    return(numeric_value)
+  }
+
+  # Return as character if not numeric
+  return(value)
+}
+
+
+#' Load All Parameters for a Drug
+#'
+#' Loads all parameters for a specified drug into a structured list.
+#' This replaces the hardcoded parameter lists.
+#'
+#' @param drug_name Character. Drug name ("morphine", "oxycodone", "alfentanil")
+#' @return List with all drug parameters
+load_drug_parameters_from_csv <- function(drug_name) {
+  drug_name <- tolower(drug_name)
+
+  # Build parameter list dynamically from CSV
+  params <- list(
+    # Drug identification
+    name = tools::toTitleCase(drug_name),
+    drug_class = ifelse(drug_name == "alfentanil",
+                       "Opioid analgesic (synthetic)",
+                       "Opioid analgesic"),
+
+    # Potency
+    potency_ratio = get_param_value(drug_name, "potency_ratio"),
+
+    # Pharmacokinetic parameters - Normal renal function
+    half_life_normal = get_param_value(drug_name, "half_life_normal"),
+    volume_distribution = get_param_value(drug_name, "volume_distribution"),
+    clearance_normal = get_param_value(drug_name, "clearance_normal"),
+
+    # Pharmacokinetic parameters - Renal impairment
+    half_life_renal_mild = get_param_value(drug_name, "half_life_renal_mild"),
+    half_life_renal_moderate = get_param_value(drug_name, "half_life_renal_moderate"),
+    half_life_renal_severe = get_param_value(drug_name, "half_life_renal_severe"),
+    clearance_renal_severe = get_param_value(drug_name, "clearance_renal_severe"),
+
+    # Fraction of drug eliminated by kidneys
+    fraction_renal_elimination = get_param_value(drug_name, "fraction_renal"),
+
+    # Bioavailability by route
+    bioavailability_iv = get_param_value(drug_name, "bioavailability_iv"),
+    bioavailability_sc = get_param_value(drug_name, "bioavailability_sc"),
+    bioavailability_oral = get_param_value(drug_name, "bioavailability_oral"),
+
+    # Therapeutic ranges
+    therapeutic_min = get_param_value(drug_name, "therapeutic_min"),
+    therapeutic_max = get_param_value(drug_name, "therapeutic_max"),
+    toxic_concentration = get_param_value(drug_name, "toxic_concentration")
+  )
+
+  # Add drug-specific metabolite information
+  if (drug_name == "morphine") {
+    params$has_active_metabolite <- TRUE
+    params$metabolite_name <- "Morphine-6-glucuronide (M6G)"
+    params$metabolite_potency_ratio <- get_param_value(drug_name, "M6G_potency")
+    params$metabolite_half_life_normal <- get_param_value(drug_name, "M6G_half_life_normal")
+    params$metabolite_half_life_renal_severe <- get_param_value(drug_name, "M6G_half_life_renal")
+    params$metabolite_accumulation_renal <- get_param_value(drug_name, "M6G_accumulation_renal")
+    params$notes <- "Avoid in severe renal impairment due to M6G accumulation. Risk of prolonged sedation and respiratory depression."
+
+  } else if (drug_name == "oxycodone") {
+    params$has_active_metabolite <- TRUE
+    params$metabolite_name <- "Oxymorphone"
+    params$metabolite_potency_ratio <- get_param_value(drug_name, "oxymorphone_potency")
+    params$metabolite_contribution <- get_param_value(drug_name, "oxymorphone_contribution")
+    params$metabolite_half_life_normal <- get_param_value(drug_name, "oxymorphone_half_life_normal")
+    params$notes <- "Preferred over morphine in moderate renal impairment. Still requires dose reduction in severe renal failure."
+
+  } else if (drug_name == "alfentanil") {
+    params$has_active_metabolite <- FALSE
+    params$metabolite_name <- "Inactive metabolites"
+    params$notes <- "Preferred in severe renal failure. Short half-life requires frequent dosing or continuous infusion. Minimal accumulation."
+  }
+
+  return(params)
+}
+
+# ==============================================================================
+# DRUG PARAMETER LISTS (Loaded from CSV)
 # ==============================================================================
 
 #' Morphine Pharmacokinetic Parameters
@@ -28,51 +186,9 @@
 #' - Active metabolite M6G is 2x more potent and renally eliminated
 #' - Contraindicated in severe renal failure
 #'
-#' @format List with pharmacokinetic parameters
+#' @format List with pharmacokinetic parameters loaded from CSV
 #' @export
-MORPHINE_PARAMS <- list(
-  # Drug identification
-  name = "Morphine",
-  drug_class = "Opioid analgesic",
-
-  # Potency (relative to morphine as reference)
-  potency_ratio = 1.0,  # Reference drug
-
-  # Pharmacokinetic parameters - Normal renal function
-  half_life_normal = 3.0,  # hours (range: 2-4 hours)
-  volume_distribution = 3.5,  # L/kg (range: 3-4 L/kg)
-  clearance_normal = 15,  # mL/min/kg (range: 12-18 mL/min/kg)
-
-  # Pharmacokinetic parameters - Renal impairment
-  half_life_renal_mild = 4.0,      # hours (CrCl 50-80 mL/min)
-  half_life_renal_moderate = 6.0,  # hours (CrCl 30-50 mL/min)
-  half_life_renal_severe = 10.0,   # hours (CrCl <30 mL/min)
-  clearance_renal_severe = 5,      # mL/min/kg (markedly reduced)
-
-  # Fraction of drug eliminated by kidneys
-  fraction_renal_elimination = 0.90,  # 90% renally eliminated
-
-  # Bioavailability by route
-  bioavailability_iv = 1.0,    # 100% (by definition)
-  bioavailability_sc = 0.85,   # 85% (subcutaneous)
-  bioavailability_oral = 0.30, # 30% (high first-pass metabolism)
-
-  # Active metabolite information
-  has_active_metabolite = TRUE,
-  metabolite_name = "Morphine-6-glucuronide (M6G)",
-  metabolite_potency_ratio = 2.0,  # M6G is ~2x more potent than morphine
-  metabolite_half_life_normal = 3.5,  # hours
-  metabolite_half_life_renal_severe = 20.0,  # hours (dramatic accumulation)
-  metabolite_accumulation_renal = 10,  # 10-fold increase in renal failure
-
-  # Therapeutic ranges (for reference)
-  therapeutic_min = 10,   # ng/mL (minimum effective concentration)
-  therapeutic_max = 100,  # ng/mL (typical upper limit before toxicity)
-  toxic_concentration = 200,  # ng/mL (associated with respiratory depression)
-
-  # Clinical notes
-  notes = "Avoid in severe renal impairment due to M6G accumulation. Risk of prolonged sedation and respiratory depression."
-)
+MORPHINE_PARAMS <- load_drug_parameters_from_csv("morphine")
 
 
 #' Oxycodone Pharmacokinetic Parameters
@@ -88,50 +204,9 @@ MORPHINE_PARAMS <- list(
 #' - Active metabolite (oxymorphone) contributes minimally
 #' - Safer option in mild-moderate renal impairment
 #'
-#' @format List with pharmacokinetic parameters
+#' @format List with pharmacokinetic parameters loaded from CSV
 #' @export
-OXYCODONE_PARAMS <- list(
-  # Drug identification
-  name = "Oxycodone",
-  drug_class = "Opioid analgesic",
-
-  # Potency (relative to morphine)
-  potency_ratio = 1.5,  # 1.5x more potent than morphine
-
-  # Pharmacokinetic parameters - Normal renal function
-  half_life_normal = 3.5,  # hours (range: 3-4.5 hours)
-  volume_distribution = 2.6,  # L/kg (range: 2-3 L/kg)
-  clearance_normal = 12,  # mL/min/kg (range: 10-15 mL/min/kg)
-
-  # Pharmacokinetic parameters - Renal impairment
-  half_life_renal_mild = 4.5,      # hours
-  half_life_renal_moderate = 5.5,  # hours
-  half_life_renal_severe = 7.0,    # hours (less affected than morphine)
-  clearance_renal_severe = 8,      # mL/min/kg
-
-  # Fraction of drug eliminated by kidneys
-  fraction_renal_elimination = 0.60,  # 60% renally eliminated (lower than morphine)
-
-  # Bioavailability by route
-  bioavailability_iv = 1.0,    # 100%
-  bioavailability_sc = 0.85,   # 85% (assumed similar to morphine)
-  bioavailability_oral = 0.70, # 70% (better oral bioavailability than morphine)
-
-  # Active metabolite information
-  has_active_metabolite = TRUE,
-  metabolite_name = "Oxymorphone",
-  metabolite_potency_ratio = 3.0,  # Oxymorphone is ~3x more potent
-  metabolite_contribution = 0.10,  # But only ~10% of effect (low concentration)
-  metabolite_half_life_normal = 7.5,  # hours
-
-  # Therapeutic ranges (for reference)
-  therapeutic_min = 5,    # ng/mL
-  therapeutic_max = 80,   # ng/mL
-  toxic_concentration = 150,  # ng/mL
-
-  # Clinical notes
-  notes = "Preferred over morphine in moderate renal impairment. Still requires dose reduction in severe renal failure."
-)
+OXYCODONE_PARAMS <- load_drug_parameters_from_csv("oxycodone")
 
 
 #' Alfentanil Pharmacokinetic Parameters
@@ -148,48 +223,9 @@ OXYCODONE_PARAMS <- list(
 #' - Hepatic elimination - safe in renal failure
 #' - Requires more frequent dosing or continuous infusion
 #'
-#' @format List with pharmacokinetic parameters
+#' @format List with pharmacokinetic parameters loaded from CSV
 #' @export
-ALFENTANIL_PARAMS <- list(
-  # Drug identification
-  name = "Alfentanil",
-  drug_class = "Opioid analgesic (synthetic)",
-
-  # Potency (relative to morphine)
-  potency_ratio = 15.0,  # 15x more potent than morphine (range: 10-20x)
-
-  # Pharmacokinetic parameters - Normal renal function
-  half_life_normal = 1.5,  # hours (range: 1-2 hours)
-  volume_distribution = 0.6,  # L/kg (small Vd, highly lipophilic)
-  clearance_normal = 6,  # mL/min/kg (range: 5-8 mL/min/kg)
-
-  # Pharmacokinetic parameters - Renal impairment
-  # Alfentanil is minimally affected by renal function
-  half_life_renal_mild = 1.5,      # hours (unchanged)
-  half_life_renal_moderate = 1.6,  # hours (minimal change)
-  half_life_renal_severe = 1.8,    # hours (minimal change)
-  clearance_renal_severe = 5.5,    # mL/min/kg (minimally reduced)
-
-  # Fraction of drug eliminated by kidneys
-  fraction_renal_elimination = 0.05,  # Only 5% renally eliminated
-
-  # Bioavailability by route
-  bioavailability_iv = 1.0,    # 100%
-  bioavailability_sc = 0.90,   # 90% (good subcutaneous absorption)
-  bioavailability_oral = 0.10, # 10% (poor oral bioavailability, not used orally)
-
-  # Active metabolite information
-  has_active_metabolite = FALSE,
-  metabolite_name = "Inactive metabolites",
-
-  # Therapeutic ranges (for reference, in ng/mL)
-  therapeutic_min = 50,   # ng/mL
-  therapeutic_max = 400,  # ng/mL
-  toxic_concentration = 800,  # ng/mL
-
-  # Clinical notes
-  notes = "Preferred in severe renal failure. Short half-life requires frequent dosing or continuous infusion. Minimal accumulation."
-)
+ALFENTANIL_PARAMS <- load_drug_parameters_from_csv("alfentanil")
 
 
 #' Get Drug Parameters by Name
@@ -253,7 +289,8 @@ adjust_drug_params_for_patient <- function(drug_params, patient_weight,
   # Adjust clearance for patient weight
   # Convert from mL/min/kg to L/hr total
   clearance_ml_min <- drug_params$clearance_normal * patient_weight
-  adjusted_params$clearance_total <- clearance_ml_min * 0.060  # Convert to L/hr
+  conversion_factor <- get_param_value("general", "conversion_ml_min_to_l_hr")
+  adjusted_params$clearance_total <- clearance_ml_min * conversion_factor  # Convert to L/hr
 
   # Adjust for renal function
   renal_category <- tolower(renal_category)
@@ -274,7 +311,7 @@ adjust_drug_params_for_patient <- function(drug_params, patient_weight,
   # Calculate adjustment factor for clearance
   if (renal_category == "severe" && !is.null(drug_params$clearance_renal_severe)) {
     clearance_ml_min_adjusted <- drug_params$clearance_renal_severe * patient_weight
-    adjusted_params$clearance_total <- clearance_ml_min_adjusted * 0.060
+    adjusted_params$clearance_total <- clearance_ml_min_adjusted * conversion_factor
   }
 
   return(adjusted_params)
