@@ -423,7 +423,13 @@ plot_renal_function_impact <- function(drug_name, dose_mg, interval_hours,
 
   # Simulate for different renal function levels
   renal_categories <- c("normal", "mild", "moderate", "severe")
-  renal_crcl <- c(100, 65, 40, 20)  # Typical CrCl for each category
+  # Load CrCl values from CSV
+  renal_crcl <- c(
+    get_param_value("general", "normal_crcl"),
+    get_param_value("general", "mild_crcl"),
+    get_param_value("general", "moderate_crcl"),
+    get_param_value("general", "severe_crcl")
+  )
 
   all_profiles <- list()
 

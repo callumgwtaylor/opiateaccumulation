@@ -204,9 +204,13 @@ calculate_concentration_repeated <- function(dose, volume_distribution,
 #' defined as 97% of steady-state concentration, which occurs at ~5 half-lives).
 #'
 #' @param half_life Numeric. Drug half-life in hours
-#' @param proportion Numeric. Proportion of steady state (default 0.97 for 97%)
+#' @param proportion Numeric. Proportion of steady state (default loaded from CSV)
 #' @return Numeric. Time to reach specified proportion of steady state in hours
-calculate_time_to_steady_state <- function(half_life, proportion = 0.97) {
+calculate_time_to_steady_state <- function(half_life, proportion = NULL) {
+  # Load default from CSV if not provided
+  if (is.null(proportion)) {
+    proportion <- get_param_value("general", "steady_state_threshold")
+  }
   # Validate inputs
   if (!is.numeric(half_life) || half_life <= 0) {
     stop("half_life must be a positive number")
@@ -331,13 +335,17 @@ calculate_loading_dose <- function(maintenance_dose, half_life, dosing_interval)
 #' @param clearance_normal Numeric. Normal clearance in L/hr
 #' @param half_life_normal Numeric. Normal half-life in hours
 #' @param creatinine_clearance Numeric. Patient's CrCl in mL/min
-#' @param normal_creatinine_clearance Numeric. Normal CrCl reference (default 100 mL/min)
+#' @param normal_creatinine_clearance Numeric. Normal CrCl reference (default loaded from CSV)
 #' @param fraction_renal Numeric. Fraction of drug eliminated renally (0-1)
 #' @return List with adjusted clearance and half_life
 adjust_for_renal_function <- function(clearance_normal, half_life_normal,
                                      creatinine_clearance,
-                                     normal_creatinine_clearance = 100,
+                                     normal_creatinine_clearance = NULL,
                                      fraction_renal = 0.9) {
+  # Load default from CSV if not provided
+  if (is.null(normal_creatinine_clearance)) {
+    normal_creatinine_clearance <- get_param_value("general", "normal_crcl")
+  }
   # Validate inputs
   if (!is.numeric(clearance_normal) || clearance_normal <= 0) {
     stop("clearance_normal must be a positive number")

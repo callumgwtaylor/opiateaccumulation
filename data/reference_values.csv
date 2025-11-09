@@ -12,6 +12,12 @@ morphine,therapeutic_max,100,ng/mL,Literature,Upper therapeutic limit
 morphine,M6G_potency,2,relative to morphine,Literature,Active metabolite
 morphine,M6G_half_life_normal,3.5,hours,Literature,
 morphine,M6G_half_life_renal,20,hours,Literature,Dramatic accumulation in renal failure
+morphine,M6G_accumulation_renal,10,fold increase,Literature,10-fold increase in renal failure
+morphine,half_life_renal_mild,4,hours,Literature,CrCl 50-80 mL/min
+morphine,half_life_renal_moderate,6,hours,Literature,CrCl 30-50 mL/min
+morphine,half_life_renal_severe,10,hours,Literature,CrCl <30 mL/min
+morphine,clearance_renal_severe,5,mL/min/kg,Literature,Markedly reduced in severe impairment
+morphine,toxic_concentration,200,ng/mL,Literature,Associated with respiratory depression
 oxycodone,potency_ratio,1.5,relative to morphine,PCF,1.5x more potent than morphine
 oxycodone,half_life_normal,3.5,hours,"Saari et al. 2012",Range: 3-4.5 hours
 oxycodone,volume_distribution,2.6,L/kg,"Saari et al. 2012",Range: 2-3 L/kg
@@ -24,6 +30,12 @@ oxycodone,therapeutic_min,5,ng/mL,Literature,
 oxycodone,therapeutic_max,80,ng/mL,Literature,
 oxycodone,oxymorphone_potency,3,relative to morphine,Literature,Active metabolite
 oxycodone,oxymorphone_contribution,0.1,fraction,Literature,Low concentration limits effect
+oxycodone,oxymorphone_half_life_normal,7.5,hours,Literature,Active metabolite half-life
+oxycodone,half_life_renal_mild,4.5,hours,Literature,CrCl 50-80 mL/min
+oxycodone,half_life_renal_moderate,5.5,hours,Literature,CrCl 30-50 mL/min
+oxycodone,half_life_renal_severe,7,hours,Literature,CrCl <30 mL/min
+oxycodone,clearance_renal_severe,8,mL/min/kg,Literature,Reduced in severe impairment
+oxycodone,toxic_concentration,150,ng/mL,Literature,Associated with toxicity
 alfentanil,potency_ratio,15,relative to morphine,Literature,Range: 10-20x morphine
 alfentanil,half_life_normal,1.5,hours,"Maitre et al. 1987",Range: 1-2 hours
 alfentanil,volume_distribution,0.6,L/kg,"Maitre et al. 1987",Small Vd due to lipophilicity
@@ -34,10 +46,21 @@ alfentanil,bioavailability_oral,0.1,fraction,Literature,Poor oral bioavailabilit
 alfentanil,fraction_renal,0.05,fraction,Literature,Only 5% renally eliminated
 alfentanil,therapeutic_min,50,ng/mL,Literature,
 alfentanil,therapeutic_max,400,ng/mL,Literature,
+alfentanil,toxic_concentration,800,ng/mL,Literature,Associated with toxicity
 alfentanil,metabolites,inactive,NA,Literature,No active metabolites
+alfentanil,half_life_renal_mild,1.5,hours,Literature,Minimal change in mild impairment
+alfentanil,half_life_renal_moderate,1.6,hours,Literature,Minimal change in moderate impairment
+alfentanil,half_life_renal_severe,1.8,hours,Literature,Minimal change in severe impairment
+alfentanil,clearance_renal_severe,5.5,mL/min/kg,Literature,Minimally reduced
 general,steady_state_threshold,0.97,fraction,Standard,97% = ~5 half-lives
 general,accumulation_significant,2,dimensionless,Clinical,Factor >2 considered significant
 general,normal_crcl,100,mL/min,Standard,Reference creatinine clearance
 general,mild_crcl,65,mL/min,Clinical,Typical mild impairment
 general,moderate_crcl,40,mL/min,Clinical,Typical moderate impairment
 general,severe_crcl,20,mL/min,Clinical,Typical severe impairment
+general,renal_threshold_normal,80,mL/min,Clinical,Threshold for normal renal function
+general,renal_threshold_mild,50,mL/min,Clinical,Threshold for mild impairment
+general,renal_threshold_moderate,30,mL/min,Clinical,Threshold for moderate impairment
+general,renal_threshold_severe,10,mL/min,Clinical,Threshold for severe impairment
+general,conversion_ml_min_to_l_hr,0.060,dimensionless,Standard,Convert mL/min to L/hr
+general,cockcroft_gault_female_factor,0.85,dimensionless,Standard,Female adjustment for Cockcroft-Gault equation
