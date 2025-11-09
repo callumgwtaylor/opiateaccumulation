@@ -1,0 +1,57 @@
+# R files
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+*.Rproj
+.Rproj.user/
+
+# Session Data files
+.RData
+
+# User-specific files
+.Ruserdata
+
+# R Environment Variables
+.Renviron
+
+# Temporary files
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Shiny app specific
+rsconnect/
+shinyapps/
+
+# RStudio files
+*.Rproj.user
+
+# OAuth tokens
+.httr-oauth
+.secrets
+
+# Packrat
+packrat/lib*/
+packrat/src/
+
+# renv
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/sandbox/
+renv/staging/
+
+# Temporary plots and outputs
+*.png
+*.pdf
+*.jpg
+!docs/*.png
+!docs/*.pdf
+
+# Log files
+*.log

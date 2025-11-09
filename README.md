@@ -4,6 +4,70 @@
 
 This project creates an interactive pharmacokinetic (PK) simulation tool to compare three opioids (morphine, oxycodone, and alfentanil) in palliative care settings. The primary goal is to demonstrate how drug accumulation patterns offset differences in potency, particularly showing how morphine's slower clearance leads to accumulation that compensates for alfentanil's higher potency.
 
+## Quick Start
+
+### Installation
+
+```r
+# Install required packages
+install.packages(c("shiny", "ggplot2", "dplyr", "tidyr", "scales", "DT"))
+```
+
+### Running the Application
+
+```r
+# Clone or download this repository
+# Set working directory to the project folder
+setwd("/path/to/opiateaccumulation")
+
+# Run the Shiny app
+shiny::runApp("app.R")
+```
+
+The application will open in your web browser.
+
+### Documentation
+
+- **[Installation Guide](docs/INSTALL.md)** - Detailed installation instructions
+- **[User Guide](docs/USER_GUIDE.md)** - Comprehensive usage instructions and clinical scenarios
+- **[Reference Data](data/reference_values.csv)** - Literature-based PK parameters
+
+## Features Implemented
+
+✅ **Core Pharmacokinetic Models**
+- One-compartment model with first-order elimination
+- Repeated dosing with accumulation calculations
+- Renal function adjustments
+- Loading dose calculations
+- Steady-state predictions
+
+✅ **Drug Parameters**
+- Morphine (reference opioid, renally eliminated)
+- Oxycodone (mixed elimination)
+- Alfentanil (hepatically eliminated)
+- Configurable patient-specific adjustments
+
+✅ **Interactive Shiny Application**
+- Drug selection and comparison
+- Patient parameter inputs (weight, age, renal function)
+- Dosing regimen configuration
+- Multiple visualization tabs
+
+✅ **Visualizations**
+- Concentration-time curves
+- Morphine-equivalent comparisons
+- Accumulation factor analysis
+- Peak and trough levels
+- Renal function impact
+- Clinical summaries with warnings
+
+✅ **Additional Features**
+- Subcutaneous route modeling
+- Clinical interpretation and warnings
+- Comprehensive parameter tables
+- Unit tests for core calculations
+- Detailed documentation
+
 ## Clinical Context
 
 In palliative care, opioid selection involves balancing:
