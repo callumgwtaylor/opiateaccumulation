@@ -48,7 +48,7 @@ renv/staging/
 
 # Temporary plots and outputs
 *.png
-#*.pdf
+*.pdf
 *.jpg
 !docs/*.png
 !docs/*.pdf
